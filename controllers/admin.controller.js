@@ -6,8 +6,6 @@ const adminController = {
   async adminRegister(req, res) {
     try {
       const { adminID, fullName, username, email, mobile, password } = req.body;
-
-      // Validate all fields including adminID
       if (
         !adminID ||
         !fullName ||
