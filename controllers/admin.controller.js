@@ -1,32 +1,16 @@
 const bcrypt = require('bcrypt');
-const { Admin, ValidAdminID } = require('../models/admin.model');
+const Admin = require('../models/admin.model');
 
 const adminController = {
   // Admin Registration
   async adminRegister(req, res) {
     try {
-      const { adminID, fullName, username, email, mobile, password } = req.body;
-      if (
-        !adminID ||
-        !fullName ||
-        !username ||
-        !email ||
-        !mobile ||
-        !password
-      ) {
+      const { fullName, username, email, mobile, password } = req.body;
+
+      if (!fullName || !username || !email || !mobile || !password) {
         return res.status(400).json({ error: 'All fields are required.' });
       }
 
-      // Check if the provided adminID is valid (exists in the valid list)
-      const isValidAdminID = await ValidAdminID.findOne({ adminID });
-
-      if (!isValidAdminID) {
-        return res
-          .status(400)
-          .json({ error: 'Invalid Admin ID. Contact the Bank.' });
-      }
-
-      // Check if admin already exists by username or email
       const existingAdmin = await Admin.findOne({
         $or: [{ username }, { email }],
       });
@@ -35,12 +19,8 @@ const adminController = {
         return res.status(400).json({ error: 'Admin already exists.' });
       }
 
-      // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
-
-      // Create new admin
       const newAdmin = new Admin({
-        adminID,
         fullName,
         username,
         email,
@@ -103,8 +83,11 @@ const adminController = {
   },
 
   // Get Admin Details
+  // Inside your adminController.js
   async getAdminDetails(req, res) {
     try {
+      console.log('Session Data:', req.session);
+
       if (!req.session.admin) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
@@ -117,7 +100,7 @@ const adminController = {
         return res.status(404).json({ error: 'Admin not found' });
       }
 
-      return res.json({ adminName: admin.fullName });
+      return res.json({ adminName: admin.fullName }); // You can add username if needed
     } catch (error) {
       console.error('Error fetching admin details:', error);
       return res.status(500).json({ error: 'Internal server error' });

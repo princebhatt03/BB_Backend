@@ -12,69 +12,58 @@ connectToDb();
 
 const app = express();
 
-// ✅ 1. CORS Setup - Allow both localhost and deployed frontend
-const corsOptions = {
-  origin: (origin, callback) => {
-    console.log('Origin:', origin); // Log for debug
-    const allowedOrigins = [process.env.FRONTEND_URL, 'http://localhost:5173'];
+// ✅ 1. CORS Setup (Allow frontend from env OR localhost:5173)
+const allowedOrigins = [process.env.FRONTEND_URL || 'http://localhost:5173'];
 
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
 app.use(
   cors({
-    origin: [process.env.FRONTEND_URL || 'http://localhost:5173'],
+    origin: allowedOrigins,
     credentials: true,
   })
 );
 
+// ✅ 2. Body Parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ✅ 2. Session Setup - Allow secure cookies for cross-origin if needed
+// ✅ 3. Session Setup with MongoDB Store (for production safety)
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || 'your_secret_key',
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-      mongoUrl: process.env.DB_CONNECT,
+      mongoUrl: process.env.DB_CONNECT, 
       collectionName: 'sessions',
-      ttl: 24 * 60 * 60,
+      ttl: 14 * 24 * 60 * 60, // 14 days
     }),
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // should be true ONLY on HTTPS
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: false, // Set true if using HTTPS in production
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
     },
   })
 );
 
-// Optional: Ensure session is set up correctly
+// Optional: Debug - Log session existence
 app.use((req, res, next) => {
   if (!req.session) {
-    return next(new Error('Session is not initialized properly'));
+    return next(new Error('Session not initialized!'));
   }
   next();
 });
 
+// ✅ 4. Flash Messages Middleware
 app.use(flash());
 
-// ✅ 3. Root Route
+// ✅ 5. Root Route - Redirect to frontend
 app.get('/', (req, res) => {
   const redirectUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   return res.redirect(redirectUrl);
 });
 
-// ✅ 4. Routes
+// ✅ 6. All Routes
 app.use('/', Routes);
 
 module.exports = app;

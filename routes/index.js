@@ -37,7 +37,7 @@ router.delete('/deleteUser/:id', deleteUser);
 router.post('/adminRegister', adminController.adminRegister);
 router.post('/adminLogin', adminController.adminLogin);
 router.get('/getAdminDetails', authMiddleware, adminController.getAdminDetails);
-router.post('/logout', adminController.adminLogout);
+router.post('/adminLogout', adminController.adminLogout);
 
 // ********** PATIENT ROUTES **********
 router.post('/registerPatient', registerPatient);
