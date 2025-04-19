@@ -86,7 +86,7 @@ const adminController = {
   // Inside your adminController.js
   async getAdminDetails(req, res) {
     try {
-      console.log('Session Data:', req.session);
+      // console.log('Session Data:', req.session);
 
       if (!req.session.admin) {
         return res.status(401).json({ error: 'Unauthorized' });
@@ -100,7 +100,7 @@ const adminController = {
         return res.status(404).json({ error: 'Admin not found' });
       }
 
-      return res.json({ adminName: admin.fullName }); // You can add username if needed
+      return res.json({ adminName: admin.fullName }); 
     } catch (error) {
       console.error('Error fetching admin details:', error);
       return res.status(500).json({ error: 'Internal server error' });
@@ -114,6 +114,10 @@ const adminController = {
         if (err) {
           return res.status(500).json({ error: 'Logout failed' });
         }
+
+        // Clear the cookie (optional, helps in some cases)
+        res.clearCookie('connect.sid'); // Assuming default session cookie name
+
         return res.status(200).json({ message: 'Logout successful' });
       });
     } catch (error) {
