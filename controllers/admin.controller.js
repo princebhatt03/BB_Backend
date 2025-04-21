@@ -47,47 +47,28 @@ const adminController = {
     try {
       const { username, password } = req.body;
 
-      if (!username || !password) {
-        return res
-          .status(400)
-          .json({ error: 'Username and password are required.' });
-      }
-
       const admin = await Admin.findOne({ username });
 
-      if (!admin) {
-        return res.status(401).json({ error: 'Invalid credentials.' });
+      if (!admin || !(await bcrypt.compare(password, admin.password))) {
+        return res.status(401).json({ error: 'Invalid username or password' });
       }
 
-      const isMatch = await bcrypt.compare(password, admin.password);
-      if (!isMatch) {
-        return res.status(401).json({ error: 'Invalid credentials.' });
-      }
-
+      // ✅ Set session
       req.session.admin = {
         id: admin._id,
         username: admin.username,
-        fullName: admin.fullName,
       };
 
-      await req.session.save(); // Ensures session persists
-
-      return res.status(200).json({
-        message: 'Login successful!',
-        admin: req.session.admin,
-      });
+      res.status(200).json({ message: 'Login successful', admin });
     } catch (error) {
-      console.error('Admin Login Error:', error);
-      return res.status(500).json({ error: 'Internal server error' });
+      console.error('Login error:', error);
+      res.status(500).json({ error: 'Internal server error' });
     }
   },
-
   // Get Admin Details
   // Inside your adminController.js
   async getAdminDetails(req, res) {
     try {
-      // console.log('Session Data:', req.session);
-
       if (!req.session.admin) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
@@ -100,7 +81,7 @@ const adminController = {
         return res.status(404).json({ error: 'Admin not found' });
       }
 
-      return res.json({ adminName: admin.fullName }); 
+      return res.json({ adminName: admin.fullName });
     } catch (error) {
       console.error('Error fetching admin details:', error);
       return res.status(500).json({ error: 'Internal server error' });
