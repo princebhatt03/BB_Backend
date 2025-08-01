@@ -34,14 +34,14 @@ app.use(
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-      mongoUrl: process.env.DB_CONNECT, 
+      mongoUrl: process.env.DB_CONNECT,
       collectionName: 'sessions',
-      ttl: 14 * 24 * 60 * 60, 
+      ttl: 14 * 24 * 60 * 60,
     }),
     cookie: {
       httpOnly: true,
       secure: false,
-      maxAge: 1000 * 60 * 60 * 24, 
+      maxAge: 1000 * 60 * 60 * 24,
     },
   })
 );
